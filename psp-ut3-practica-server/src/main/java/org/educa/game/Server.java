@@ -1,8 +1,14 @@
 package org.educa.game;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Map;
+
 public class Server {
 
-    private Map <String> partidas;
+    private Map<String,String> partidas;
 
     public void run() { //TODO datagram
         System.out.println("Creando socket servidor");
@@ -13,26 +19,28 @@ public class Server {
             // asigna el socket a una dirección y puerto
             serverSocket.bind(addr);
             System.out.println("Aceptando conexiones");
-            aceptarLlamadas();
+            while (true) {
+                newSocket = serverSocket.accept();
+                System.out.println("Conexion recibida");
+                Request p = new Request(newSocket);
+                Thread hilo = new Thread(p);
+                hilo.start();
+                System.out.println("Esperando nueva conexión");
+            }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (newSocket != null) {
-                newSocket.close();
+            try {
+                if (newSocket != null) {
+                    newSocket.close();
+                }
+            }catch(IOException e){
+                e.printStackTrace();
             }
         }
     }
 
-    private void aceptarLlamadas(){
-        while (true) {
-            newSocket = serverSocket.accept();
-            System.out.println("Conexion recibida");
-            Request p = new Request(newSocket);
-            Thread hilo = new Thread(p);
-            hilo.start();
-            System.out.println("Esperando nueva conexión");
-        }
-    }
+
 
     private void crearGrupos(){
 
