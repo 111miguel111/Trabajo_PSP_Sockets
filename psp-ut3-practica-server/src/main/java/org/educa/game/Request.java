@@ -9,10 +9,17 @@ public class Request implements Runnable{
     private boolean anfitrion;
     private static int puerto;
 
+    /**
+     *
+     * @param socket
+     */
     public Request(Socket socket){
         this.socket=socket;
     }
 
+    /**
+     *
+     */
     public void run(){
         try (InputStream is = socket.getInputStream();
              InputStreamReader isr = new InputStreamReader(is);
@@ -21,14 +28,24 @@ public class Request implements Runnable{
             PrintWriter pWriter = new PrintWriter(os);){
             String mensaje = bfr.readLine();
             System.out.println("Mensaje recibido: " + mensaje);
-            anfitrion=Server.anfitrion();
-            pWriter.println(anfitrion);
-            if(anfitrion) {
-                puerto=Server.generarPuerto();
-            }
-            pWriter.println(puerto);
+            asignarPuerto(pWriter);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     *
+     * @param pWriter
+     */
+    private synchronized void asignarPuerto(PrintWriter pWriter) {
+        anfitrion=Server.anfitrion();
+        pWriter.println(anfitrion);
+        if(anfitrion) {
+            puerto = Server.generarPuerto();
+            pWriter.println(puerto);
+        }else {
+            pWriter.println(puerto+1);
         }
     }
 

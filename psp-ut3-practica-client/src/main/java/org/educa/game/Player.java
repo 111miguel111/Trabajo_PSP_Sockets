@@ -26,7 +26,7 @@ public class Player extends Thread {
             // Para indicar la dirección IP y el número de puerto del socket stream servidor
             // al que se desea conectar, el método connect() hace uso de un objeto
             // de la clase java.net.InetSocketAddress.
-            SocketAddress addr = new InetSocketAddress("localhost", 5555);
+            SocketAddress addr = new InetSocketAddress("localhost", 5554);
             clientSocket.connect(addr);
             try (OutputStream os = clientSocket.getOutputStream();
                  PrintWriter pWriter = new PrintWriter(os);
@@ -47,8 +47,12 @@ public class Player extends Thread {
                     mensajeServer=null;
                 }
 
-                //crearDatagrama(puerto,anfitrion);
+                crearDatagrama(puerto,anfitrion, this.getName());
 
+                boolean partida=false;
+                /*while(!partida){
+
+                }*/
                 System.out.println();
 
             }
@@ -58,20 +62,42 @@ public class Player extends Thread {
         }
     }
 
-    private static void crearDatagrama(int puerto, boolean anfitrion) {
+    /**
+     *
+     * @param puerto
+     * @param anfitrion
+     */
+    private static void crearDatagrama(int puerto, boolean anfitrion, String nick) {
+        boolean empate=false;
+        String resultado="V";
+        int pAnfitrion;
+        int pInvitado;
 
-        //el if aqui?
+        if(anfitrion) {
+            pAnfitrion =puerto;
+            pInvitado=puerto+1;
+        }else{
+            pAnfitrion=puerto;
+            pInvitado =puerto-1;
+        }
+
         System.out.println("Creando socket datagram");
-        InetSocketAddress addr = new InetSocketAddress("localhost", 5556);
-        InetSocketAddress adrToSend = new InetSocketAddress("localhost", 5555);
+        InetSocketAddress addr = new InetSocketAddress("localhost", pAnfitrion);
+        InetSocketAddress adrToSend = new InetSocketAddress("localhost", pInvitado);
+
         try (DatagramSocket datagramSocket = new DatagramSocket(addr)){
             System.out.println("Enviando mensaje");
+            do {
+                if (!anfitrion) {
+                    sendDatagramInvitado(adrToSend, datagramSocket, tirarDado(), nick);
+                    empate = receiveDatagramInvitado(datagramSocket);
+                } else {
+                    resultado = receiveDatagramAnfitrion(datagramSocket);
+                    sendDatagramAnfitrion(adrToSend, datagramSocket, resultado);
 
-            if(anfitrion) {
-                sendDatagram(adrToSend, datagramSocket, puerto);
-            }else{
-                receiveDatagram(datagramSocket);
-            }
+                }
+
+            }while(empate || "E".equalsIgnoreCase(resultado));
 
             System.out.println("Terminado");
         } catch (IOException e) {
@@ -80,26 +106,63 @@ public class Player extends Thread {
     }
 
 
-    private static void sendDatagram(InetSocketAddress adrToSend, DatagramSocket datagramSocket, int puerto) throws IOException {
-        DatagramPacket datagrama = new DatagramPacket(String.valueOf(puerto).getBytes(), String.valueOf(puerto).getBytes().length, adrToSend);
+    private static void sendDatagramInvitado(InetSocketAddress adrToSend, DatagramSocket datagramSocket, int resultado, String nick) throws IOException {
+        DatagramPacket datagrama = new DatagramPacket((nick+","+ resultado).getBytes(), (nick+","+ resultado).getBytes().length, adrToSend);
         datagramSocket.send(datagrama);
         System.out.println("Mensaje enviado");
     }
 
-    private static void receiveDatagram(DatagramSocket datagramSocket) throws IOException {
+    private static void sendDatagramAnfitrion(InetSocketAddress adrToSend, DatagramSocket datagramSocket, String resultado) throws IOException {
+        DatagramPacket datagrama = new DatagramPacket((resultado).getBytes(), (resultado).getBytes().length, adrToSend);
+        datagramSocket.send(datagrama);
+        System.out.println("Mensaje enviado");
+    }
+
+    private static String receiveDatagramAnfitrion(DatagramSocket datagramSocket) throws IOException {
         byte[] mensaje = new byte[100];
         DatagramPacket datagrama = new DatagramPacket(mensaje, mensaje.length);
         datagramSocket.receive(datagrama);
-        System.out.println("Mensaje recibido: " + new String(datagrama.getData(), 0, datagrama.getLength()));
+        String cadena = new String(datagrama.getData(), 0, datagrama.getLength()); //casteo de el mensaje del datagrama
+        String [] nickResultado = cadena.split(",");
+        System.out.println("El "+ nickResultado[0]+" ha sacado un "+nickResultado[1]);
+
+        return resolucion(tirarDado(),Integer.parseInt(nickResultado[1]));
+
     }
 
-    private void tirarDado(){
-        //random
+    private static boolean receiveDatagramInvitado(DatagramSocket datagramSocket) throws IOException {
+        byte[] mensaje = new byte[100];
+        DatagramPacket datagrama = new DatagramPacket(mensaje, mensaje.length);
+        datagramSocket.receive(datagrama);
+        String cadena = new String(datagrama.getData(), 0, datagrama.getLength()); //casteo de el mensaje del datagrama
+        System.out.println("El resultado es "+cadena);
+
+        if("E".equalsIgnoreCase(cadena)){
+            return true;
+        }else{
+            return false;
+        }
+
     }
 
-    /*private int random(){
+    private static String resolucion(int anfitrion, int invitado){
+        String resultado="";
+        if(anfitrion>invitado){
+            resultado = "V";
+        }else if(anfitrion<invitado){
+            resultado = "D";
+        }else{
+            resultado = "E";
+        }
+
+        return resultado;
+    }
+
+    private static int tirarDado(){
         Random rnd = new Random();
+        return rnd.nextInt(0,6)+1;
+    }
 
-    }*/
+
 
 }

@@ -11,7 +11,7 @@ public class Server {
     private Map<String,String> partidas;
 
     private static boolean anfitrion=false;
-    private static int puerto=5555;
+    private static int puerto=5556;
 
     /**
      * Metodo run donde se crea el servidor
@@ -22,7 +22,7 @@ public class Server {
         Socket newSocket = null;
         try (ServerSocket serverSocket = new ServerSocket()) {
             System.out.println("Realizando el bind");
-            InetSocketAddress addr = new InetSocketAddress("localhost", 5555);
+            InetSocketAddress addr = new InetSocketAddress("localhost", 5554);
             // asigna el socket a una dirección y puerto
             serverSocket.bind(addr);
             System.out.println("Aceptando conexiones");
@@ -64,7 +64,8 @@ public class Server {
     }
 
     public synchronized static int generarPuerto(){
-        return puerto++;
+        puerto = puerto+2;
+        return puerto;
     }
 
     public synchronized static boolean anfitrion(){
