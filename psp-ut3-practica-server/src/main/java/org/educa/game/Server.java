@@ -13,7 +13,7 @@ public class Server {
     public static Semaphore[] dados={new Semaphore(1),new Semaphore(1)};
     private static boolean anfitrion=false;
     private static int puerto=5556;
-
+    private static int cp =1;
     /**
      * Metodo run donde se crea el servidor
      *
@@ -76,18 +76,16 @@ public class Server {
         puerto = puerto+2;
         return puerto;
     }
-    //cp =1;
-    public synchronized static boolean anfitrion(int nJugadores){
-        /*
-        cp++;
-        if (cp==njugadores){
-            anfitrion=true;
-            cp=1
-        }else{
-            anfitrion=false
-        }
-         */
 
+    public synchronized static boolean anfitrion(int nJugadores){
+
+        cp++;
+        if (cp==nJugadores){
+            anfitrion=true;
+            cp=1;
+        }else{
+            anfitrion=false;
+        }
         return anfitrion;
     }
 }

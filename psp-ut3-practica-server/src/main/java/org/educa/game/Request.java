@@ -51,11 +51,9 @@ public class Request implements Runnable{
      */
     private synchronized void asignarPuerto(PrintWriter pWriter,String juego) {
         if("Dados".equalsIgnoreCase(juego)) {
-
             int nJugadores=2;
             anfitrion = Server.anfitrion(nJugadores);
             pWriter.println(anfitrion);
-
             if (anfitrion) {
                 puerto = Server.generarPuerto();
                 pWriter.println(puerto);
