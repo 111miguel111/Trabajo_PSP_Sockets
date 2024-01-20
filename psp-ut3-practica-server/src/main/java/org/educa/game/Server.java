@@ -5,11 +5,12 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 public class Server {
 
-    private Map<String,String> partidas;
-
+    private static Map<String,String> partidas;
+    public static Semaphore[] dados={new Semaphore(1),new Semaphore(1)};
     private static boolean anfitrion=false;
     private static int puerto=5556;
 
@@ -51,25 +52,42 @@ public class Server {
 
 
 
-    private void crearGrupos(){
-
+    private void crearGrupos(Boolean anfitrion){
+        try {
+        if(anfitrion){
+            Server.dados[0].acquire();
+        }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void informarCliente(){
 
     }
 
-    private void finPartida(){
+    public synchronized static void finPartida(String idPartida){
+        System.out.println(partidas.get(idPartida));
 
+        partidas.remove(idPartida);
     }
 
     public synchronized static int generarPuerto(){
         puerto = puerto+2;
         return puerto;
     }
+    //cp =1;
+    public synchronized static boolean anfitrion(int nJugadores){
+        /*
+        cp++;
+        if (cp==njugadores){
+            anfitrion=true;
+            cp=1
+        }else{
+            anfitrion=false
+        }
+         */
 
-    public synchronized static boolean anfitrion(){
-        anfitrion=!anfitrion;
         return anfitrion;
     }
 }

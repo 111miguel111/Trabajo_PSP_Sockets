@@ -26,9 +26,20 @@ public class Request implements Runnable{
              BufferedReader bfr = new BufferedReader(isr);
             OutputStream os = socket.getOutputStream();
             PrintWriter pWriter = new PrintWriter(os);){
-            String mensaje = bfr.readLine();
+            String nombre="";
+            String juego="";
+            String mensaje[] = bfr.readLine().split(",");//El player informa si empieza, termina una partida y los datos necesarios
+            if("Empezar".equalsIgnoreCase(mensaje[0])){
+                nombre=mensaje[1];
+                juego=mensaje[2];
+                asignarPuerto(pWriter,juego);
+            }else{
+                String idPartida=mensaje[1];
+                Server.finPartida(idPartida);
+            }
             System.out.println("Mensaje recibido: " + mensaje);
-            asignarPuerto(pWriter);
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -38,16 +49,24 @@ public class Request implements Runnable{
      *
      * @param pWriter
      */
-    private synchronized void asignarPuerto(PrintWriter pWriter) {
-        anfitrion=Server.anfitrion();
-        pWriter.println(anfitrion);
-        if(anfitrion) {
-            puerto = Server.generarPuerto();
-            pWriter.println(puerto);
-        }else {
-            pWriter.println(puerto+1);
+    private synchronized void asignarPuerto(PrintWriter pWriter,String juego) {
+        if("Dados".equalsIgnoreCase(juego)) {
+
+            int nJugadores=2;
+            anfitrion = Server.anfitrion(nJugadores);
+            pWriter.println(anfitrion);
+
+            if (anfitrion) {
+                puerto = Server.generarPuerto();
+                pWriter.println(puerto);
+            } else {
+                pWriter.println(puerto + 1);
+            }
+        }else{
+            System.out.println("No hay otro tipo de juego");
         }
     }
+
 
 
 }

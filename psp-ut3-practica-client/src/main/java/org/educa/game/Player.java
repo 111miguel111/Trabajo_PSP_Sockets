@@ -6,11 +6,15 @@ import java.util.Random;
 
 public class Player extends Thread {
     private String gameType;
+    private boolean empezar=true;
     private boolean anfitrion;
     private int puerto;
+    private String idPartida;
+
     public Player(String name, String gameType) {
         super.setName(name);
         this.gameType = gameType;
+
     }
 
     @Override
@@ -33,7 +37,14 @@ public class Player extends Thread {
                  InputStream is = clientSocket.getInputStream();
                  BufferedReader reader = new BufferedReader(new InputStreamReader(is))){
 
-                String mensaje = "mensaje desde el cliente " + this.getName();
+                String mensaje;
+                if(empezar){
+                    mensaje= "Empezar" +","+ this.getName()+","+this.gameType;//avisar que esta empezando una partida y el tipo
+                }else{
+                    mensaje= "Terminar" +","+ this.idPartida;//avisar que esta finalizando una partida y el tipo
+                }
+
+
                 pWriter.println(mensaje);
                 pWriter.flush();
                 //System.out.println("Mensaje enviado");
