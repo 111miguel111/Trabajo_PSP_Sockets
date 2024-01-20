@@ -6,6 +6,7 @@ import java.net.Socket;
 public class Request implements Runnable{
 
     private final Socket socket;
+    private boolean anfitrion;
     private static int puerto;
 
     public Request(Socket socket){
@@ -20,8 +21,9 @@ public class Request implements Runnable{
             PrintWriter pWriter = new PrintWriter(os);){
             String mensaje = bfr.readLine();
             System.out.println("Mensaje recibido: " + mensaje);
-            pWriter.println(Server.anfitrion);
-            if(Server.anfitrion) {
+            anfitrion=Server.anfitrion();
+            pWriter.println(anfitrion);
+            if(anfitrion) {
                 puerto=Server.generarPuerto();
             }
             pWriter.println(puerto);

@@ -10,7 +10,7 @@ public class Server {
 
     private Map<String,String> partidas;
 
-    protected static boolean anfitrion=true;
+    private static boolean anfitrion=false;
     private static int puerto=5555;
 
     /**
