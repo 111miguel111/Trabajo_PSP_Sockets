@@ -37,7 +37,7 @@ public class Request implements Runnable{
                 String idPartida=mensaje[1];
                 Server.finPartida(idPartida);
             }
-            System.out.println("Mensaje recibido: " + mensaje);
+            System.out.println("Mensaje recibido: " + mensaje[1]);
 
 
         } catch (IOException e) {
@@ -54,12 +54,8 @@ public class Request implements Runnable{
             int nJugadores=2;
             anfitrion = Server.anfitrion(nJugadores);
             pWriter.println(anfitrion);
-            if (anfitrion) {
-                puerto = Server.generarPuerto();
-                pWriter.println(puerto);
-            } else {
-                pWriter.println(puerto + 1);
-            }
+            puerto= Server.generarPuerto();
+            pWriter.println(puerto);
         }else{
             System.out.println("No hay otro tipo de juego");
         }

@@ -12,7 +12,8 @@ public class Server {
     private static Map<String,String> partidas;
     public static Semaphore[] dados={new Semaphore(1),new Semaphore(1)};
     private static boolean anfitrion=false;
-    private static int puerto=5556;
+    public static int puerto=5556;
+    public static int puertoPartida=0;
     private static int cp =1;
     /**
      * Metodo run donde se crea el servidor
@@ -73,19 +74,19 @@ public class Server {
     }
 
     public synchronized static int generarPuerto(){
-        puerto = puerto+2;
+        puerto=puerto+1;
         return puerto;
     }
 
     public synchronized static boolean anfitrion(int nJugadores){
 
-        cp++;
         if (cp==nJugadores){
             anfitrion=true;
             cp=1;
         }else{
             anfitrion=false;
         }
+        cp++;
         return anfitrion;
     }
 }
