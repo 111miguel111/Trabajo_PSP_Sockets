@@ -6,6 +6,7 @@ import java.net.Socket;
 public class Request implements Runnable{
 
     private final Socket socket;
+    private static int puerto;
 
     public Request(Socket socket){
         this.socket=socket;
@@ -17,13 +18,17 @@ public class Request implements Runnable{
              BufferedReader bfr = new BufferedReader(isr);
             OutputStream os = socket.getOutputStream();
             PrintWriter pWriter = new PrintWriter(os);){
-
             String mensaje = bfr.readLine();
             System.out.println("Mensaje recibido: " + mensaje);
-            pWriter.println("HOLA");
-
+            pWriter.println(Server.anfitrion);
+            if(Server.anfitrion) {
+                puerto=Server.generarPuerto();
+            }
+            pWriter.println(puerto);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+
 }

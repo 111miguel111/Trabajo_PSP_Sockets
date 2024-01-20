@@ -10,7 +10,14 @@ public class Server {
 
     private Map<String,String> partidas;
 
-    public void run() { //TODO datagram
+    protected static boolean anfitrion=true;
+    private static int puerto=5555;
+
+    /**
+     * Metodo run donde se crea el servidor
+     *
+     */
+    public void run() {
         System.out.println("Creando socket servidor");
         Socket newSocket = null;
         try (ServerSocket serverSocket = new ServerSocket()) {
@@ -19,6 +26,8 @@ public class Server {
             // asigna el socket a una dirección y puerto
             serverSocket.bind(addr);
             System.out.println("Aceptando conexiones");
+            //Acepta las conexiones que le vayan entrando,
+            //y crea hilos donde darle respuesta a las conexiones
             while (true) {
                 newSocket = serverSocket.accept();
                 System.out.println("Conexion recibida");
@@ -54,5 +63,12 @@ public class Server {
 
     }
 
+    public synchronized static int generarPuerto(){
+        return puerto++;
+    }
 
+    public synchronized static boolean anfitrion(){
+        anfitrion=!anfitrion;
+        return anfitrion;
+    }
 }
