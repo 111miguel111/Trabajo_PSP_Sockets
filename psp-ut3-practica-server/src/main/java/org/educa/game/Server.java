@@ -15,9 +15,9 @@ public class Server {
     public static int puerto=5556;
     public static int puertoPartida=0;
     private static int cp =1;
+
     /**
      * Metodo run donde se crea el servidor
-     *
      */
     public void run() {
         System.out.println("Creando socket servidor");
@@ -52,7 +52,10 @@ public class Server {
     }
 
 
-
+    /**
+     * Metodo para crear los grupos de las partidas
+     * @param anfitrion recibe si se es o no anfitrion
+     */
     private void crearGrupos(Boolean anfitrion){
         try {
         if(anfitrion){
@@ -67,26 +70,39 @@ public class Server {
 
     }
 
+    /**
+     * Metodo sincronizado para borrar una partida del hashMap
+     * @param idPartida recibe el id de la partida -> clave del hashMap
+     */
     public synchronized static void finPartida(String idPartida){
         System.out.println(partidas.get(idPartida));
 
         partidas.remove(idPartida);
     }
 
+    /**
+     * Metodo sincronizado para asignar puertos a los diferentes jugadores
+     * @return devuelve el puerto
+     */
     public synchronized static int generarPuerto(){
         puerto=puerto+1;
         return puerto;
     }
 
+    /**
+     * Metodo sincronizado donde se asigna ser anfitrion del juego o no, tenga los jugadores que tenga
+     * @param nJugadores recibe el numero de jugadores que tiene el juego
+     * @return devuelve si se es anfitrion o no
+     */
     public synchronized static boolean anfitrion(int nJugadores){
-
+        //si el cp(currentPlayer) es igual al numero de jugadores del juego, se le hace anfitrion
         if (cp==nJugadores){
             anfitrion=true;
-            cp=1;
-        }else{
+            cp=1; //todo ----- si aqui se vuelve 1 y mas abajo hace ++
+        }else{ //si no, no es anfitrion
             anfitrion=false;
         }
-        cp++;
+        cp++; //TODO ----- seria 2 siempre
         return anfitrion;
     }
 }
