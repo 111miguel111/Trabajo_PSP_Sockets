@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.*;
 import java.util.Random;
 
+
+//TODO cambiar los metodos del programa a inglés
 public class Player extends Thread {
     private String gameType;
     private boolean empezar=true;
