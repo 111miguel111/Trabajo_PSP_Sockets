@@ -33,49 +33,37 @@ public class Player extends Thread {
     private void comunicacionServidor(){
         try (Socket clientSocket = new Socket()) {
             System.out.println("Estableciendo la conexión");
-            // Se le indica la dirección IP y el número de puerto del socket stream servidor
+            //Se le indica la dirección IP y el número de puerto del socket stream servidor
             SocketAddress addr = new InetSocketAddress("localhost", 5554);
             clientSocket.connect(addr); //se conecta
-            //se abren las tuberias para la comunicacion
+            //Se abren las tuberias para la comunicacion
             try (OutputStream os = clientSocket.getOutputStream();
                  PrintWriter pWriter = new PrintWriter(os);
                  InputStream is = clientSocket.getInputStream();
                  BufferedReader reader = new BufferedReader(new InputStreamReader(is))){
 
                 String mensaje;
-                //si el juego esta empezando se manda un mensaje distinto a si esta terminando
+                //Si el juego esta empezando se manda un mensaje distinto a si esta terminando
                 if(empezar){
-                    mensaje= "Empezar" +","+ this.getName()+","+this.gameType;//avisar que esta empezando una partida y el tipo
+                    mensaje= "Empezar" +","+ this.getName()+","+this.gameType;//Avisar que esta empezando una partida y el tipo
+                    //Mientras el server no devuelva nul, recoge su mensaje
+                    String mensajeServer = reader.readLine();
+                    while(mensajeServer!=null){
+                        System.out.println(mensajeServer);
+                        anfitrion = Boolean.parseBoolean(mensajeServer); //Si es o no anfitrion
+                        puerto = Integer.parseInt(reader.readLine()); //El numero de puerto
+                        System.out.println("El puerto es: " + puerto);
+                        System.out.println(anfitrion);
+                        mensajeServer=null; //Una vez tiene lo que necesita, se fuerza la salida del while
+                    }
+                    //Al salir del while, crea la comunicacion con otro player
+                    crearDatagrama(puerto,anfitrion, this.getName());
                 }else{
-                    mensaje= "Terminar" +","+ this.idPartida;//avisar que esta finalizando una partida y el tipo
+                    mensaje= "Terminar" +","+ this.idPartida;//Avisar que esta finalizando una partida y el tipo
                 }
 
                 pWriter.println(mensaje);
                 pWriter.flush();
-
-                //System.out.println("Mensaje enviado");
-
-                //TODO ESTO NO DEBERIA ESTAR EN EL IF? SI HA TERMINADO NO SE COMUNICAN DE NUEVO, NO?
-                //mientras el server no devuelva nul, recoge su mensaje
-                String mensajeServer = reader.readLine();
-                while(mensajeServer!=null){
-                    System.out.println(mensajeServer);
-                    anfitrion = Boolean.parseBoolean(mensajeServer); //si es o no anfitrion
-                    puerto = Integer.parseInt(reader.readLine()); //el numero de puerto
-                    System.out.println("El puerto es: " + puerto);
-                    System.out.println(anfitrion);
-                    mensajeServer=null; //una vez tiene lo que necesita, se fuerza la salida del while
-                }
-
-                //al salir del while, crea la comunicacion con otro player
-                crearDatagrama(puerto,anfitrion, this.getName());
-
-                boolean partida=false;
-                /*while(!partida){
-
-                }*/
-                System.out.println();
-
             }
             System.out.println("Terminado");
         } catch (IOException e) {
