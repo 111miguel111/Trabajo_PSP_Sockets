@@ -4,19 +4,17 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 public class Server {
 
-    private static Map<String,String> partidas = new HashMap<>();
+    private static Map<String,String> partidas;
     public static Semaphore[] dados={new Semaphore(1),new Semaphore(1)};
     private static boolean anfitrion=false;
     public static int puerto=5556;
-    private static int cont;
+    public static int puertoPartida=0;
     private static int cp =1;
-
 
     /**
      * Metodo run donde se crea el servidor
@@ -51,57 +49,6 @@ public class Server {
                 e.printStackTrace();
             }
         }
-    }
-
-    /**
-     *
-     * @param anfitrion
-     * @param puerto
-     * @return
-     */
-    private  synchronized static String crearPartida(Boolean anfitrion, int puerto){
-        if(anfitrion){
-            cont++;
-            String infoJugadores="partida_"+ cont +","+"Jugador1"+","+puerto+","+"Jugador2";
-            partidas.put("partida"+ cont,infoJugadores);
-        }else{
-            String infoJugadores=partidas.get("partida"+ cont);
-            infoJugadores=infoJugadores+","+puerto;
-            partidas.replace("partida"+ cont,infoJugadores);
-        }
-        return "partida"+ cont;
-    }
-
-    /**
-     *
-     * @param anfitrion
-     * @param puerto
-     * @return
-     */
-    public static String crearParejas(Boolean anfitrion,int puerto){
-        String idPartida;
-        try {
-            if(anfitrion){
-                dados[0].acquire();
-                while(dados[1].availablePermits()==1){
-
-                }
-                idPartida=crearPartida(anfitrion,puerto);
-                Thread.sleep(100);
-                dados[0].release();
-            }else{
-                dados[1].acquire();
-                while(dados[0].availablePermits()==1){
-
-                }
-                Thread.sleep(10);
-                idPartida=crearPartida(anfitrion,puerto);
-                dados[1].release();
-            }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        return partidas.get(idPartida);
     }
 
 
@@ -151,11 +98,11 @@ public class Server {
         //si el cp(currentPlayer) es igual al numero de jugadores del juego, se le hace anfitrion
         if (cp==nJugadores){
             anfitrion=true;
-            cp=0;
+            cp=1; //todo ----- si aqui se vuelve 1 y mas abajo hace ++
         }else{ //si no, no es anfitrion
             anfitrion=false;
         }
-        cp++;
+        cp++; //TODO ----- seria 2 siempre
         return anfitrion;
     }
 }
