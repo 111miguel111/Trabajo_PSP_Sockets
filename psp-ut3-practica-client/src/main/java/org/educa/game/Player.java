@@ -11,7 +11,7 @@ public class Player extends Thread {
     private boolean empezar=true;
     private boolean anfitrion;
     private int puerto;
-    private String idPartida;
+    private static String[] infoPartida;
 
     public Player(String name, String gameType) {
         super.setName(name);
@@ -46,8 +46,10 @@ public class Player extends Thread {
                 //si el juego esta empezando se manda un mensaje distinto a si esta terminando
                 if(empezar){
                     mensaje= "Empezar" +","+ this.getName()+","+this.gameType;//avisar que esta empezando una partida y el tipo
+
                 }else{
-                    mensaje= "Terminar" +","+ this.idPartida;//avisar que esta finalizando una partida y el tipo
+                    mensaje= "Terminar" +","+ this.infoPartida[0];//avisar que esta finalizando una partida y el tipo
+
                 }
 
                 pWriter.println(mensaje);
@@ -56,19 +58,25 @@ public class Player extends Thread {
                 //System.out.println("Mensaje enviado");
 
                 //TODO ESTO NO DEBERIA ESTAR EN EL IF? SI HA TERMINADO NO SE COMUNICAN DE NUEVO, NO?
-                //mientras el server no devuelva nul, recoge su mensaje
+                //mientras el server no devuelva null, recoge su mensaje
                 String mensajeServer = reader.readLine();
                 while(mensajeServer!=null){
                     System.out.println(mensajeServer);
                     anfitrion = Boolean.parseBoolean(mensajeServer); //si es o no anfitrion
                     puerto = Integer.parseInt(reader.readLine()); //el numero de puerto
+                    infoPartida= reader.readLine().split(",");
                     System.out.println("El puerto es: " + puerto);
                     System.out.println(anfitrion);
+                    System.out.println(infoPartida[0]);
+                    System.out.println(infoPartida[1]);
+                    System.out.println(infoPartida[2]);
+                    System.out.println(infoPartida[3]);
+                    System.out.println(infoPartida[4]);
                     mensajeServer=null; //una vez tiene lo que necesita, se fuerza la salida del while
                 }
 
                 //al salir del while, crea la comunicacion con otro player
-                crearDatagrama(puerto,anfitrion, this.getName());
+                crearDatagrama(anfitrion, this.getName());
 
                 boolean partida=false;
                 /*while(!partida){
@@ -85,44 +93,41 @@ public class Player extends Thread {
 
     /**
      * Metodo que crea el datagrama para la comunicacion entre players
-     * @param puerto recibe el puerto al que conectarse
      * @param anfitrion recibe si es o no anfitrion
      */
-    private static void crearDatagrama(int puerto, boolean anfitrion, String nick) {
-        boolean empate=false;
-        String resultado="V";
-        int pAnfitrion;
-        int pInvitado;
+    private static void crearDatagrama(boolean anfitrion, String nick) {
+        String result="V";
+        int ownPort;
+        int sendPort;
 
-        //TODO arreglar
         if(anfitrion) {
-            pAnfitrion =puerto;
-            pInvitado=puerto+1;
+            ownPort =Integer.parseInt(infoPartida[2]);
+            sendPort=Integer.parseInt(infoPartida[4]);
         }else{
-            pAnfitrion=puerto;
-            pInvitado =puerto-1;
+            ownPort=Integer.parseInt(infoPartida[4]);
+            sendPort =Integer.parseInt(infoPartida[2]);
         }
 
         System.out.println("Creando socket datagram");
 
         //se establecen ambos puertos, el de enviar y el de recibir mensajes
-        InetSocketAddress addr = new InetSocketAddress("localhost", pAnfitrion);
-        InetSocketAddress adrToSend = new InetSocketAddress("localhost", pInvitado);
+        InetSocketAddress addr = new InetSocketAddress("localhost", ownPort);
+        InetSocketAddress adrToSend = new InetSocketAddress("localhost", sendPort);
 
         //se crea el datagrama
         try (DatagramSocket datagramSocket = new DatagramSocket(addr)){
             System.out.println("Enviando mensaje");
             do {
-                if (!anfitrion) { //si no se es anfitrion, primero se envia el mensaje del resultado de la tirada.
+                if (!anfitrion) { //si no se es anfitrion, primero se envia el mensaje del result de la tirada.
                     sendDatagramInvitado(adrToSend, datagramSocket, tirarDado(), nick);
-                    empate = receiveDatagramInvitado(datagramSocket); //recibe si ha sido empate o no
-                } else { //si se es anfitrion, primero se recibe el resultado del otro jugador
-                    resultado = receiveDatagramAnfitrion(datagramSocket);
+                    receiveDatagramInvitado(datagramSocket); //recibe si ha sido empate o no
+                } else { //si se es anfitrion, primero se recibe el result del otro jugador
+                    result = receiveDatagramAnfitrion(datagramSocket);
                     //y despues le dice si ha empatado, ganado o perdido
-                    sendDatagramAnfitrion(adrToSend, datagramSocket, resultado);
+                    sendDatagramAnfitrion(adrToSend, datagramSocket, result);
                 }
 
-            }while(empate || "E".equalsIgnoreCase(resultado)); //en caso de ser empate, se repite
+            }while("E".equalsIgnoreCase(result)); //en caso de ser empate, se repite
 
             System.out.println("Terminado");
         } catch (IOException e) {
@@ -182,20 +187,12 @@ public class Player extends Thread {
      * @return devuelve un boolean que dice si ha empatado o no
      * @throws IOException lanza IOException en caso de fallo
      */
-    private static boolean receiveDatagramInvitado(DatagramSocket datagramSocket) throws IOException {
+    private static void receiveDatagramInvitado(DatagramSocket datagramSocket) throws IOException {
         byte[] mensaje = new byte[100];
         DatagramPacket datagrama = new DatagramPacket(mensaje, mensaje.length);
         datagramSocket.receive(datagrama);
         String cadena = new String(datagrama.getData(), 0, datagrama.getLength()); //casteo de el mensaje del datagrama
         System.out.println("El resultado es "+cadena); //imprime E, V o D
-
-        //devuelve si se ha empatado
-        // TODO creo que esto sobra, el while ya compara la "E" ¿¿??
-        if("E".equalsIgnoreCase(cadena)){
-            return true;
-        }else{
-            return false;
-        }
     }
 
     /**
