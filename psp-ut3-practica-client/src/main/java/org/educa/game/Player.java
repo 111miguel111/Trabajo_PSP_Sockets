@@ -11,7 +11,7 @@ public class Player extends Thread {
     private boolean empezar=true;
     private boolean anfitrion;
     private int puerto;
-    private String[] infoPartida;
+    private static String[] infoPartida;
 
     public Player(String name, String gameType) {
         super.setName(name);
@@ -36,7 +36,7 @@ public class Player extends Thread {
             // Se le indica la dirección IP y el número de puerto del socket stream servidor
             SocketAddress addr = new InetSocketAddress("localhost", 5554);
             clientSocket.connect(addr); //se conecta
-            //se abren las tuberias para la comunicacion98
+            //se abren las tuberias para la comunicacion
             try (OutputStream os = clientSocket.getOutputStream();
                  PrintWriter pWriter = new PrintWriter(os);
                  InputStream is = clientSocket.getInputStream();
@@ -95,7 +95,7 @@ public class Player extends Thread {
      * Metodo que crea el datagrama para la comunicacion entre players
      * @param anfitrion recibe si es o no anfitrion
      */
-    private void crearDatagrama(boolean anfitrion, String nick) {
+    private static void crearDatagrama(boolean anfitrion, String nick) {
         String result="V";
         int ownPort;
         int sendPort;
