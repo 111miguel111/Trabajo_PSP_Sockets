@@ -85,13 +85,18 @@ public class Player extends Thread {
         int pAnfitrion;
         int pInvitado;
 
+
         //TODO arreglar
         if(anfitrion) {
             pAnfitrion =puerto;
             pInvitado=puerto+1;
+
+            System.out.println("pAn "+pAnfitrion+" pinv"+pInvitado);
         }else{
             pAnfitrion=puerto;
             pInvitado =puerto-1;
+
+            System.out.println("pAn "+pAnfitrion+" pinv"+pInvitado);
         }
 
         System.out.println("Creando socket datagram");
