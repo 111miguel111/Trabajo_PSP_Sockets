@@ -46,24 +46,25 @@ public class Player extends Thread {
                 //Si el juego esta empezando se manda un mensaje distinto a si esta terminando
                 if(empezar){
                     mensaje= "Empezar" +","+ this.getName()+","+this.gameType;//Avisar que esta empezando una partida y el tipo
-                    //Mientras el server no devuelva nul, recoge su mensaje
-                    String mensajeServer = reader.readLine();
-                    while(mensajeServer!=null){
-                        System.out.println(mensajeServer);
-                        anfitrion = Boolean.parseBoolean(mensajeServer); //Si es o no anfitrion
-                        puerto = Integer.parseInt(reader.readLine()); //El numero de puerto
-                        System.out.println("El puerto es: " + puerto);
-                        System.out.println(anfitrion);
-                        mensajeServer=null; //Una vez tiene lo que necesita, se fuerza la salida del while
-                    }
-                    //Al salir del while, crea la comunicacion con otro player
-                    crearDatagrama(puerto,anfitrion, this.getName());
+
                 }else{
                     mensaje= "Terminar" +","+ this.idPartida;//Avisar que esta finalizando una partida y el tipo
                 }
 
                 pWriter.println(mensaje);
                 pWriter.flush();
+                //Mientras el server no devuelva nul, recoge su mensaje
+                String mensajeServer = reader.readLine();
+                while(mensajeServer!=null){
+                    System.out.println(mensajeServer);
+                    anfitrion = Boolean.parseBoolean(mensajeServer); //Si es o no anfitrion
+                    puerto = Integer.parseInt(reader.readLine()); //El numero de puerto
+                    System.out.println("El puerto es: " + puerto);
+                    System.out.println(anfitrion);
+                    mensajeServer=null; //Una vez tiene lo que necesita, se fuerza la salida del while
+                }
+                //Al salir del while, crea la comunicacion con otro player
+                crearDatagrama(puerto,anfitrion, this.getName());
             }
             System.out.println("Terminado");
         } catch (IOException e) {

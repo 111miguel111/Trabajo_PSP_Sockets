@@ -98,11 +98,11 @@ public class Server {
         //si el cp(currentPlayer) es igual al numero de jugadores del juego, se le hace anfitrion
         if (cp==nJugadores){
             anfitrion=true;
-            cp=1; //todo ----- si aqui se vuelve 1 y mas abajo hace ++
+            cp=0;
         }else{ //si no, no es anfitrion
             anfitrion=false;
         }
-        cp++; //TODO ----- seria 2 siempre
+        cp++;
         return anfitrion;
     }
 }

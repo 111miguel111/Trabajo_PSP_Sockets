@@ -57,8 +57,10 @@ public class Request implements Runnable{
             int nJugadores=2;
             anfitrion = Server.anfitrion(nJugadores);
             pWriter.println(anfitrion);
+            pWriter.flush();
             puerto= Server.generarPuerto();
             pWriter.println(puerto);
+            pWriter.flush();
         }else{ //else para si se incorporan otros juegos con distinto numero de jugadores
             System.out.println("No hay otro tipo de juego");
         }
