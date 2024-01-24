@@ -109,13 +109,17 @@ public class Player extends Thread {
             while("E".equalsIgnoreCase(resultado)){ //en caso de ser empate, se repite
                 if (!anfitrion) { //si no se es anfitrion, primero se envia el mensaje del resultado de la tirada.
                     sendDatagramInvitado(adrToSend, datagramSocket, tirarDado(), nick);
-                    receiveDatagramInvitado(datagramSocket); //recibe si ha sido empate o no
+                    resultado = receiveDatagramInvitado(datagramSocket); //recibe si ha sido empate o no
+
+                    System.out.println("REsultado inv: "+resultado);
                 } else { //si se es anfitrion, primero se recibe el resultado del otro jugador
                     resultado = receiveDatagramAnfitrion(datagramSocket);
                     //y despues le dice si ha empatado, ganado o perdido
                     sendDatagramAnfitrion(adrToSend, datagramSocket, resultado, nick);
+
+                    System.out.println("REsultado anf: "+resultado);
                 }
-                System.out.println(resultado);
+                System.out.println("REsultado fin: "+resultado);
             }
 
         } catch (IOException e) {
@@ -175,7 +179,7 @@ public class Player extends Thread {
      * @return devuelve un boolean que dice si ha empatado o no
      * @throws IOException lanza IOException en caso de fallo
      */
-    private void receiveDatagramInvitado(DatagramSocket datagramSocket) throws IOException {
+    private String receiveDatagramInvitado(DatagramSocket datagramSocket) throws IOException {
         byte[] mensaje = new byte[100];
         DatagramPacket datagrama = new DatagramPacket(mensaje, mensaje.length);
         datagramSocket.receive(datagrama);
@@ -187,6 +191,8 @@ public class Player extends Thread {
         }else{
             System.out.println("Ha ganado el invitado");
         }
+
+        return cadena;
     }
 
     /**
