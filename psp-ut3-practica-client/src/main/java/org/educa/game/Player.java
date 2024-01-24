@@ -11,7 +11,7 @@ public class Player extends Thread {
     private boolean empezar=true;
     private boolean anfitrion;
     private int puerto;
-    private String idPartida;
+    private String partida;
 
     public Player(String name, String gameType) {
         super.setName(name);
@@ -56,14 +56,15 @@ public class Player extends Thread {
                         System.out.println(mensajeServer);
                         anfitrion = Boolean.parseBoolean(mensajeServer); //Si es o no anfitrion
                         puerto = Integer.parseInt(reader.readLine()); //El numero de puerto
-                        System.out.println("El puerto es: " + puerto);
-                        System.out.println(anfitrion);
+                        partida=reader.readLine();
+                        System.out.println("Anfitrion: "+anfitrion +" Puerto: "+ puerto +" Partida: "+ partida);
+
                         mensajeServer=null; //Una vez tiene lo que necesita, se fuerza la salida del while
                     }
                     //Al salir del while, crea la comunicacion con otro player
                     crearDatagrama(puerto,anfitrion, this.getName());
                 }else{
-                    mensaje= "Terminar" +","+ this.idPartida;//Avisar que esta finalizando una partida y el tipo
+                    mensaje= "Terminar" +","+ this.partida;//Avisar que esta finalizando una partida y el tipo
                     pWriter.println(mensaje);
                     pWriter.flush();
                 }

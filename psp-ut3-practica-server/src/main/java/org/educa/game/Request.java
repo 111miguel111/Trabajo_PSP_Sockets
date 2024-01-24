@@ -7,8 +7,8 @@ public class Request implements Runnable{
 
     private final Socket socket;
     private boolean anfitrion;
-    private static int puerto;
-
+    private int puerto;
+    private String partida=null;
     /**
      * Constructor del Request
      * @param socket recibe el socket
@@ -61,6 +61,14 @@ public class Request implements Runnable{
             puerto= Server.generarPuerto();
             pWriter.println(puerto);
             pWriter.flush();
+            Server.guardarJugadoresYCrearParejas(""+anfitrion+","+puerto);
+            while(partida==null){
+                partida=Server.datosPartida(""+puerto);
+            }
+            pWriter.println(partida);
+            pWriter.flush();
+
+
         }else{ //else para si se incorporan otros juegos con distinto numero de jugadores
             System.out.println("No hay otro tipo de juego");
         }

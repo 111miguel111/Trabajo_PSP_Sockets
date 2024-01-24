@@ -4,17 +4,20 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 public class Server {
-
-    private static Map<String,String> partidas;
+    public static Map<String,String> partidas=new HashMap<String, String>();
     public static Semaphore[] dados={new Semaphore(1),new Semaphore(1)};
     private static boolean anfitrion=false;
     public static int puerto=5556;
-    public static int puertoPartida=0;
+    public static ArrayList<String> jugadores=new ArrayList<>();
+    public static ArrayList<String> parejas=new ArrayList<>();
     private static int cp =1;
+    private static int contador=0;
 
     /**
      * Metodo run donde se crea el servidor
@@ -56,14 +59,8 @@ public class Server {
      * Metodo para crear los grupos de las partidas
      * @param anfitrion recibe si se es o no anfitrion
      */
-    private void crearGrupos(Boolean anfitrion){
-        try {
-        if(anfitrion){
-            Server.dados[0].acquire();
-        }
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    private void informarAnfitrion(Boolean anfitrion){
+
     }
 
     private void informarCliente(){
@@ -85,8 +82,43 @@ public class Server {
      * @return devuelve el puerto
      */
     public synchronized static int generarPuerto(){
+
         puerto=puerto+1;
         return puerto;
+    }
+    public synchronized static int generarIdPartida(boolean anfitrion){
+        contador = contador+1;
+        return contador;
+    }
+    public synchronized static void guardarJugadoresYCrearParejas(String datos){
+        jugadores.add(datos);
+        String anfitrion="";
+        int posA=-1;
+        String invitado="";
+        int posI=-1;
+        for(int i=0;i<jugadores.size();i++){
+            if(jugadores.get(i).contains("true")){
+                anfitrion= jugadores.get(i);
+                posA=i;
+            }else {
+                invitado= jugadores.get(i);
+                posI=i;
+            }
+        }
+        if(!(anfitrion.isEmpty() || invitado.isEmpty())){
+            jugadores.remove(posA);
+            jugadores.remove(posI);
+            contador = contador+1;
+            parejas.add("Partida"+contador+","+anfitrion+","+invitado);
+        }
+    }
+    public synchronized static String datosPartida(String puerto){
+        for(int i=0;i<parejas.size();i++){
+            if(parejas.get(i).contains(puerto)){
+                return parejas.get(i);
+            }
+        }
+        return null;
     }
 
     /**
