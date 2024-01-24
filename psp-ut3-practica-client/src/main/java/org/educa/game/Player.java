@@ -62,7 +62,7 @@ public class Player extends Thread {
                         mensajeServer=null; //Una vez tiene lo que necesita, se fuerza la salida del while
                     }
                     //Al salir del while, crea la comunicacion con otro player
-                    crearDatagrama(this.getName());
+                    comunicacionPlayers(this.getName());
                 }else{
                     mensaje= "Terminar" +","+ this.partida;//Avisar que esta finalizando una partida y el tipo
                     pWriter.println(mensaje);
@@ -77,25 +77,17 @@ public class Player extends Thread {
     /**
      * Metodo que crea el datagrama para la comunicacion entre players
      */
-    private void crearDatagrama(String nick) {
+    private void comunicacionPlayers(String nick) {
         String resultado="E";
         int pPropio=puerto;
         int pOtroJugador;
 
         String [] partes = partida.split(",");
 
-
-        //TODO arreglar
         if(anfitrion) {
-
             pOtroJugador=Integer.parseInt(partes[4]);
-
-            //System.out.println("pAn "+pPropio+" pinv"+pOtroJugador);
         }else{
-
             pOtroJugador =Integer.parseInt(partes[2]);
-
-            //System.out.println("pAn "+pOtroJugador+" pinv"+pPropio);
         }
 
         System.out.println("Creando socket datagram");
@@ -221,7 +213,4 @@ public class Player extends Thread {
         Random rnd = new Random();
         return rnd.nextInt(0,2)+1;
     }
-
-
-
 }
