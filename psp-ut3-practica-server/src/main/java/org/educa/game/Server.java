@@ -105,9 +105,9 @@ public class Server {
                 posI=i;
             }
         }
-        if(!(anfitrion.isEmpty() || invitado.isEmpty())){
-            jugadores.remove(posA);
-            jugadores.remove(posI);
+        if(!anfitrion.isEmpty() && !invitado.isEmpty()){
+            jugadores.remove(anfitrion);
+            jugadores.remove(invitado);
             contador = contador+1;
             parejas.add("Partida"+contador+","+anfitrion+","+invitado);
         }
