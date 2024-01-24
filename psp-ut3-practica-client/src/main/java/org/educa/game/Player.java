@@ -47,24 +47,26 @@ public class Player extends Thread {
                 if(empezar){
                     mensaje= "Empezar" +","+ this.getName()+","+this.gameType;//Avisar que esta empezando una partida y el tipo
 
+
+                    pWriter.println(mensaje);
+                    pWriter.flush();
+                    //Mientras el server no devuelva nul, recoge su mensaje
+                    String mensajeServer = reader.readLine();
+                    while(mensajeServer!=null){
+                        System.out.println(mensajeServer);
+                        anfitrion = Boolean.parseBoolean(mensajeServer); //Si es o no anfitrion
+                        puerto = Integer.parseInt(reader.readLine()); //El numero de puerto
+                        System.out.println("El puerto es: " + puerto);
+                        System.out.println(anfitrion);
+                        mensajeServer=null; //Una vez tiene lo que necesita, se fuerza la salida del while
+                    }
+                    //Al salir del while, crea la comunicacion con otro player
+                    crearDatagrama(puerto,anfitrion, this.getName());
                 }else{
                     mensaje= "Terminar" +","+ this.idPartida;//Avisar que esta finalizando una partida y el tipo
+                    pWriter.println(mensaje);
+                    pWriter.flush();
                 }
-
-                pWriter.println(mensaje);
-                pWriter.flush();
-                //Mientras el server no devuelva nul, recoge su mensaje
-                String mensajeServer = reader.readLine();
-                while(mensajeServer!=null){
-                    System.out.println(mensajeServer);
-                    anfitrion = Boolean.parseBoolean(mensajeServer); //Si es o no anfitrion
-                    puerto = Integer.parseInt(reader.readLine()); //El numero de puerto
-                    System.out.println("El puerto es: " + puerto);
-                    System.out.println(anfitrion);
-                    mensajeServer=null; //Una vez tiene lo que necesita, se fuerza la salida del while
-                }
-                //Al salir del while, crea la comunicacion con otro player
-                crearDatagrama(puerto,anfitrion, this.getName());
             }
             System.out.println("Terminado");
         } catch (IOException e) {
@@ -100,18 +102,17 @@ public class Player extends Thread {
 
         //se crea el datagrama
         try (DatagramSocket datagramSocket = new DatagramSocket(addr)){
-            System.out.println("Enviando mensaje");
             do {
                 if (!anfitrion) { //si no se es anfitrion, primero se envia el mensaje del resultado de la tirada.
                     sendDatagramInvitado(adrToSend, datagramSocket, tirarDado(), nick);
-                    empate = receiveDatagramInvitado(datagramSocket); //recibe si ha sido empate o no
+                    receiveDatagramInvitado(datagramSocket); //recibe si ha sido empate o no
                 } else { //si se es anfitrion, primero se recibe el resultado del otro jugador
                     resultado = receiveDatagramAnfitrion(datagramSocket);
                     //y despues le dice si ha empatado, ganado o perdido
-                    sendDatagramAnfitrion(adrToSend, datagramSocket, resultado);
+                    sendDatagramAnfitrion(adrToSend, datagramSocket, resultado, nick);
                 }
 
-            }while(empate || "E".equalsIgnoreCase(resultado)); //en caso de ser empate, se repite
+            }while("E".equalsIgnoreCase(resultado)); //en caso de ser empate, se repite
 
             System.out.println("Terminado");
         } catch (IOException e) {
@@ -130,7 +131,7 @@ public class Player extends Thread {
     private static void sendDatagramInvitado(InetSocketAddress adrToSend, DatagramSocket datagramSocket, int resultado, String nick) throws IOException {
         DatagramPacket datagrama = new DatagramPacket((nick+","+ resultado).getBytes(), (nick+","+ resultado).getBytes().length, adrToSend);
         datagramSocket.send(datagrama);
-        System.out.println("Mensaje enviado");
+        System.out.println("Mensaje enviado por el invitado "+nick);
     }
 
     /**
@@ -140,10 +141,10 @@ public class Player extends Thread {
      * @param resultado Recibe su resultado
      * @throws IOException lanza IOException en caso de fallo
      */
-    private static void sendDatagramAnfitrion(InetSocketAddress adrToSend, DatagramSocket datagramSocket, String resultado) throws IOException {
+    private static void sendDatagramAnfitrion(InetSocketAddress adrToSend, DatagramSocket datagramSocket, String resultado, String nick) throws IOException {
         DatagramPacket datagrama = new DatagramPacket((resultado).getBytes(), (resultado).getBytes().length, adrToSend);
         datagramSocket.send(datagrama);
-        System.out.println("Mensaje enviado");
+        System.out.println("Mensaje enviado por en anfitrion "+nick);
     }
 
     /**
@@ -171,19 +172,17 @@ public class Player extends Thread {
      * @return devuelve un boolean que dice si ha empatado o no
      * @throws IOException lanza IOException en caso de fallo
      */
-    private static boolean receiveDatagramInvitado(DatagramSocket datagramSocket) throws IOException {
+    private static void receiveDatagramInvitado(DatagramSocket datagramSocket) throws IOException {
         byte[] mensaje = new byte[100];
         DatagramPacket datagrama = new DatagramPacket(mensaje, mensaje.length);
         datagramSocket.receive(datagrama);
         String cadena = new String(datagrama.getData(), 0, datagrama.getLength()); //casteo de el mensaje del datagrama
-        System.out.println("El resultado es "+cadena); //imprime E, V o D
-
-        //devuelve si se ha empatado
-        // TODO creo que esto sobra, el while ya compara la "E" ¿¿??
-        if("E".equalsIgnoreCase(cadena)){
-            return true;
+        if("V".equalsIgnoreCase(cadena)) {
+            System.out.println("Ha ganado el anfitrion"); //imprime E, V o D
+        } else if ("E".equalsIgnoreCase(cadena)) {
+            System.out.println("Ha habido empate");
         }else{
-            return false;
+            System.out.println("Ha ganado el invitado");
         }
     }
 
