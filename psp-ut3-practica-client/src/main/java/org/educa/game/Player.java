@@ -5,32 +5,39 @@ import java.net.*;
 import java.util.Random;
 
 
-//TODO cambiar los metodos del programa a inglés
 public class Player extends Thread {
     private String gameType;
-    private boolean empezar=true;
-    private boolean anfitrion;
-    private int puerto;
-    private String partida;
+    private boolean start =true;
+    private boolean host;
+    private int port;
+    private String game;
 
+    /**
+     *
+     * @param name
+     * @param gameType
+     */
     public Player(String name, String gameType) {
         super.setName(name);
         this.gameType = gameType;
 
     }
 
+    /**
+     *
+     */
     @Override
     public void run() {
         System.out.println("Start player");
         System.out.println("Conectando al server");
-        comunicacionServidor();
+        communicationServer();
     }
 
     /**
      * Metodo para conectar a los jugadores con el servidor
      * @param: no recibe nada
      */
-    private void comunicacionServidor(){
+    private void communicationServer(){
         try (Socket clientSocket = new Socket()) {
             System.out.println("Estableciendo la conexión");
             //Se le indica la dirección IP y el número de puerto del socket stream servidor
@@ -42,31 +49,30 @@ public class Player extends Thread {
                  InputStream is = clientSocket.getInputStream();
                  BufferedReader reader = new BufferedReader(new InputStreamReader(is))){
 
-                String mensaje;
+                String message;
                 //Si el juego esta empezando se manda un mensaje distinto a si esta terminando
-                if(empezar){
-                    mensaje= "Empezar" +","+ this.getName()+","+this.gameType;//Avisar que esta empezando una partida y el tipo
-
-
-                    pWriter.println(mensaje);
+                if(start){
+                    message= "Empezar" +","+ this.getName()+","+this.gameType;//Avisar que esta empezando una partida y el tipo
+                    pWriter.println(message);
                     pWriter.flush();
-                    //Mientras el server no devuelva nul, recoge su mensaje
-                    String mensajeServer = reader.readLine();
-                    while(mensajeServer!=null){
-                        System.out.println(mensajeServer);
-                        anfitrion = Boolean.parseBoolean(mensajeServer); //Si es o no anfitrion
-                        puerto = Integer.parseInt(reader.readLine()); //El numero de puerto
-                        partida=reader.readLine();
-                        //System.out.println("Anfitrion: "+anfitrion +" Puerto: "+ puerto +" Partida: "+ partida);
+                    //Mientras el server no devuelva null, recoge su mensaje
+                    String serverMessage = reader.readLine();
+                    while(serverMessage!=null) {
+                        host = Boolean.parseBoolean(serverMessage); //Si es o no anfitrion
+                        port = Integer.parseInt(reader.readLine()); //El numero de puerto
+                        game = reader.readLine();
 
-                        mensajeServer=null; //Una vez tiene lo que necesita, se fuerza la salida del while
+                        serverMessage = null; //Una vez tiene lo que necesita, se fuerza la salida del while
                     }
+                    clientSocket.close();
                     //Al salir del while, crea la comunicacion con otro player
-                    comunicacionPlayers(this.getName());
+                    communicationPlayers(this.getName());
                 }else{
-                    mensaje= "Terminar" +","+ this.partida;//Avisar que esta finalizando una partida y el tipo
-                    pWriter.println(mensaje);
+                    message= "Terminar" +","+ this.game;//Avisar que esta finalizando una partida y el tipo
+                    pWriter.println(message);
                     pWriter.flush();
+                    String []parts = game.split(",");
+                    System.out.println(parts[0]+" finalizada, datos enviados al Servidor");
                 }
             }
         } catch (IOException e) {
@@ -77,41 +83,40 @@ public class Player extends Thread {
     /**
      * Metodo que crea el datagrama para la comunicacion entre players
      */
-    private void comunicacionPlayers(String nick) {
-        String resultado="E";
-        int pPropio=puerto;
-        int pOtroJugador;
+    private void communicationPlayers(String nick) {
+        String result="E";
+        int ownPort= port;
+        int anothersPort;
 
-        String [] partes = partida.split(",");
+        String [] parts = game.split(",");
 
-        if(anfitrion) {
-            pOtroJugador=Integer.parseInt(partes[4]);
+        if(host) {
+            anothersPort=Integer.parseInt(parts[4]);
         }else{
-            pOtroJugador =Integer.parseInt(partes[2]);
+            anothersPort =Integer.parseInt(parts[2]);
         }
 
         System.out.println("Creando socket datagram");
 
         //se establecen ambos puertos, el de enviar y el de recibir mensajes
-        InetSocketAddress addr = new InetSocketAddress("localhost", pPropio);
-        InetSocketAddress adrToSend = new InetSocketAddress("localhost", pOtroJugador);
+        InetSocketAddress addr = new InetSocketAddress("localhost", ownPort);
+        InetSocketAddress adrToSend = new InetSocketAddress("localhost", anothersPort);
 
         //se crea el datagrama
         try (DatagramSocket datagramSocket = new DatagramSocket(addr)){
-            while("E".equalsIgnoreCase(resultado)){ //en caso de ser empate, se repite
-                if (!anfitrion) { //si no se es anfitrion, primero se envia el mensaje del resultado de la tirada.
-                    sendDatagramInvitado(adrToSend, datagramSocket, tirarDado(), nick);
-                    resultado = receiveDatagramInvitado(datagramSocket); //recibe si ha sido empate o no
-
-                    System.out.println("REsultado inv: "+resultado);
+            while("E".equalsIgnoreCase(result)){ //en caso de ser empate, se repite
+                if (!host) { //si no se es anfitrion, primero se envia el mensaje del resultado de la tirada.
+                    sendDatagramGuest(adrToSend, datagramSocket, rollDice(), nick);
+                    result = receiveDatagramGuest(datagramSocket, parts[0]); //recibe si ha sido empate o no
                 } else { //si se es anfitrion, primero se recibe el resultado del otro jugador
-                    resultado = receiveDatagramAnfitrion(datagramSocket);
+                    result = receiveDatagramHost(datagramSocket, nick, parts[0]);
                     //y despues le dice si ha empatado, ganado o perdido
-                    sendDatagramAnfitrion(adrToSend, datagramSocket, resultado, nick);
-
-                    System.out.println("REsultado anf: "+resultado);
+                    sendDatagramHost(adrToSend, datagramSocket, result);
                 }
-                System.out.println("REsultado fin: "+resultado);
+            }
+            start = false;
+            if(host) {
+                communicationServer();
             }
 
         } catch (IOException e) {
@@ -123,27 +128,25 @@ public class Player extends Thread {
      * Metodo para mandar un mensaje desde el invitado
      * @param adrToSend recive en inetSocket que le indica donde se manda
      * @param datagramSocket Recibe el socket
-     * @param resultado Recibe el resultado del dado
+     * @param result Recibe el resultado del dado
      * @param nick Recibe su nick
      * @throws IOException lanza IOException en caso de fallo
      */
-    private static void sendDatagramInvitado(InetSocketAddress adrToSend, DatagramSocket datagramSocket, int resultado, String nick) throws IOException {
-        DatagramPacket datagrama = new DatagramPacket((nick+","+ resultado).getBytes(), (nick+","+ resultado).getBytes().length, adrToSend);
+    private static void sendDatagramGuest(InetSocketAddress adrToSend, DatagramSocket datagramSocket, int result, String nick) throws IOException {
+        DatagramPacket datagrama = new DatagramPacket((nick+","+ result).getBytes(), (nick+","+ result).getBytes().length, adrToSend);
         datagramSocket.send(datagrama);
-        System.out.println("El invitado"+ nick+" ha sacado un "+resultado);
     }
 
     /**
      * Metodo para mandar un mensaje desde el anfitrion
      * @param adrToSend recive en inetSocket que le indica donde se manda
      * @param datagramSocket Recibe el socket
-     * @param resultado Recibe su resultado
+     * @param result Recibe su resultado
      * @throws IOException lanza IOException en caso de fallo
      */
-    private static void sendDatagramAnfitrion(InetSocketAddress adrToSend, DatagramSocket datagramSocket, String resultado, String nick) throws IOException {
-        DatagramPacket datagrama = new DatagramPacket((resultado).getBytes(), (resultado).getBytes().length, adrToSend);
+    private static void sendDatagramHost(InetSocketAddress adrToSend, DatagramSocket datagramSocket, String result) throws IOException {
+        DatagramPacket datagrama = new DatagramPacket((result).getBytes(), (result).getBytes().length, adrToSend);
         datagramSocket.send(datagrama);
-        System.out.println("Mensaje enviado por en anfitrion "+nick);
     }
 
     /**
@@ -152,36 +155,35 @@ public class Player extends Thread {
      * @return devuelve la resolucion del juego
      * @throws IOException lanza IOException en caso de fallo
      */
-    private static String receiveDatagramAnfitrion(DatagramSocket datagramSocket) throws IOException {
-        byte[] mensaje = new byte[100];
-        DatagramPacket datagrama = new DatagramPacket(mensaje, mensaje.length);
+    private static String receiveDatagramHost(DatagramSocket datagramSocket, String host, String game) throws IOException {
+        byte[] message = new byte[100];
+        DatagramPacket datagrama = new DatagramPacket(message, message.length);
         datagramSocket.receive(datagrama);
-        String cadena = new String(datagrama.getData(), 0, datagrama.getLength()); //casteo del mensaje del datagrama
-        System.out.println(cadena);
-        String [] nickResultado = cadena.split(","); //se separa el mensaje
+        String received = new String(datagrama.getData(), 0, datagrama.getLength()); //casteo del mensaje del datagrama
+        String [] nickResult = received.split(","); //se separa el mensaje
 
         //hace uso del metodo resolucion para devolver quien ha ganado
-        return resolucion(tirarDado(),Integer.parseInt(nickResultado[1]));
+        return resolution(rollDice(),Integer.parseInt(nickResult[1]),nickResult[0], host, game);
 
     }
 
     /**
      * Metodo para que el invitado reciba un mensaje
      * @param datagramSocket Recibe el socket
-     * @return devuelve un boolean que dice si ha empatado o no
+     * @return devuelve un string que dice si ha empatado o no
      * @throws IOException lanza IOException en caso de fallo
      */
-    private String receiveDatagramInvitado(DatagramSocket datagramSocket) throws IOException {
-        byte[] mensaje = new byte[100];
-        DatagramPacket datagrama = new DatagramPacket(mensaje, mensaje.length);
-        datagramSocket.receive(datagrama);
-        String cadena = new String(datagrama.getData(), 0, datagrama.getLength()); //casteo de el mensaje del datagrama
+    private String receiveDatagramGuest(DatagramSocket datagramSocket, String game) throws IOException {
+        byte[] message = new byte[100];
+        DatagramPacket datagram = new DatagramPacket(message, message.length);
+        datagramSocket.receive(datagram);
+        String cadena = new String(datagram.getData(), 0, datagram.getLength()); //casteo de el mensaje del datagrama
         if("V".equalsIgnoreCase(cadena)) {
-            System.out.println("Ha ganado el anfitrion");
+            System.out.println("Ha ganado el anfitrion en la "+game);
         } else if ("E".equalsIgnoreCase(cadena)) {
-            System.out.println("Ha habido empate");
+            System.out.println("Ha habido empate en la "+game);
         }else{
-            System.out.println("Ha ganado el invitado");
+            System.out.println("Ha ganado el invitado en la "+game);
         }
 
         return cadena;
@@ -189,16 +191,19 @@ public class Player extends Thread {
 
     /**
      * Metodo para calcular quien ha ganado
-     * @param anfitrion Recibe el resultado del anfitrion
-     * @param invitado Recibe el resultado del invitado
+     * @param host Recibe el resultado del anfitrion
+     * @param guest Recibe el resultado del invitado
+     * @param nickHost recibe el nombre del host
+     * @param nickGuest recibe el nombre del guest
      * @return devuelve quien ha ganado
      */
-    private static String resolucion(int anfitrion, int invitado){
+    private static String resolution(int host, int guest, String nickGuest, String nickHost, String game){
 
-        System.out.println("El anfitrion ha sacado un "+anfitrion);
-        if(anfitrion>invitado){
+        System.out.println("El anfitrion "+nickHost+" de la "+game+" ha sacado un "+host);
+        System.out.println("Y el invitado "+nickGuest+" de la "+game+" ha sacado un "+guest);
+        if(host>guest){
             return "V";
-        }else if(anfitrion<invitado){
+        }else if(host<guest){
             return "D";
         }else{
             return "E";
@@ -209,8 +214,8 @@ public class Player extends Thread {
      * Metodo para tirar el dado
      * @return devuelve el resultado de la tirada
      */
-    private static int tirarDado(){
+    private static int rollDice(){
         Random rnd = new Random();
-        return rnd.nextInt(0,2)+1;
+        return rnd.nextInt(0,6)+1;
     }
 }

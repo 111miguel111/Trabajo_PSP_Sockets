@@ -5,17 +5,14 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Semaphore;
 
 public class Server {
-    private static boolean anfitrion=false;
-    public static int puerto=5556;
-    public static ArrayList<String> jugadores=new ArrayList<>();
-    public static ArrayList<String> parejas=new ArrayList<>();
+    private static boolean host =false;
+    public static int port =5556;
+    public static ArrayList<String> players =new ArrayList<>();
+    public static ArrayList<String> couples =new ArrayList<>();
     private static int cp =1;
-    private static int contador=0;
+    private static int count =0;
 
     /**
      * Metodo run donde se crea el servidor
@@ -35,8 +32,8 @@ public class Server {
                 newSocket = serverSocket.accept();
                 System.out.println("Conexion recibida");
                 Request p = new Request(newSocket);
-                Thread hilo = new Thread(p);
-                hilo.start();
+                Thread thread = new Thread(p);
+                thread.start();
                 System.out.println("Esperando nueva conexión");
             }
         } catch (IOException e) {
@@ -52,48 +49,42 @@ public class Server {
         }
     }
 
-    /**
-     * Metodo sincronizado para borrar una partida del hashMap
-     * @param idPartida recibe el id de la partida -> clave del hashMap
-     */
-//    public synchronized static void finPartida(String idPartida){
-//        System.out.println(partidas.get(idPartida));
-//
-//        partidas.remove(idPartida);
-//    }
 
     /**
      * Metodo sincronizado para asignar puertos a los diferentes jugadores
      * @return devuelve el puerto
      */
-    public synchronized static int generarPuerto(){
-
-        puerto=puerto+1;
-        return puerto;
+    public synchronized static int generatePort(){
+        port = port +1;
+        return port;
     }
 
-    public synchronized static void guardarJugadoresYCrearParejas(String datos){
-        jugadores.add(datos);
-        String anfitrion="";
-        String invitado="";
-        for(int i=0;i<jugadores.size();i++){
-            if(jugadores.get(i).contains("true")){
-                anfitrion= jugadores.get(i);
+    /**
+     * metodo para crear los jugadores con su respectivo puerto, y las parejas para cada partida
+     * @param data recibe los datos de los jugadores para añadirlos a su array
+     */
+    public synchronized static void savePlayersAndCouples(String data){
+        players.add(data);
+        String host="";
+        String guest="";
+        for(int i = 0; i< players.size(); i++){
+            if(players.get(i).contains("true")){
+                host= players.get(i);
             }else {
-                invitado= jugadores.get(i);
+                guest= players.get(i);
             }
         }
-        if(!anfitrion.isEmpty() && !invitado.isEmpty()){
-            jugadores.remove(anfitrion);
-            jugadores.remove(invitado);
-            contador = contador+1;
-            parejas.add("Partida"+contador+","+anfitrion+","+invitado);
+        if(!host.isEmpty() && !guest.isEmpty()){
+            players.remove(host);
+            players.remove(guest);
+            count = count +1;
+            couples.add("Partida"+ count +","+host+","+guest);
         }
     }
-    public synchronized static String datosPartida(String puerto){
-        for(int i=0;i<parejas.size();i++){
-            if(parejas.get(i).contains(puerto)){
-                return parejas.get(i);
+    public synchronized static String startingData(String port){
+        for(int i = 0; i< couples.size(); i++){
+            if(couples.get(i).contains(port)){
+                return couples.get(i);
             }
         }
         return null;
@@ -101,18 +92,32 @@ public class Server {
 
     /**
      * Metodo sincronizado donde se asigna ser anfitrion del juego o no, tenga los jugadores que tenga
-     * @param nJugadores recibe el numero de jugadores que tiene el juego
+     * @param nPlayers recibe el numero de jugadores que tiene el juego
      * @return devuelve si se es anfitrion o no
      */
-    public synchronized static boolean anfitrion(int nJugadores){
+    public synchronized static boolean isHost(int nPlayers){
         //si el cp(currentPlayer) es igual al numero de jugadores del juego, se le hace anfitrion
-        if (cp==nJugadores){
-            anfitrion=true;
+        if (cp==nPlayers){
+            host =true;
             cp=0;
         }else{ //si no, no es anfitrion
-            anfitrion=false;
+            host =false;
         }
         cp++;
-        return anfitrion;
+        return host;
     }
+
+    /**
+     * metodo para finalizar la partida y eliminarla del server
+     * @param idGame recibe el id de la partida
+     */
+    public synchronized static void endGame(String idGame) {
+        for(int i = 0; i< couples.size(); i++) {
+            if(couples.get(i).contains(idGame)) {
+                couples.remove(i);
+                System.out.println(idGame+" eliminada del servidor");
+            }
+        }
+    }
+
 }

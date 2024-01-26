@@ -6,9 +6,9 @@ import java.net.Socket;
 public class Request implements Runnable{
 
     private final Socket socket;
-    private boolean anfitrion;
-    private int puerto;
-    private String partida=null;
+    private boolean host;
+    private int port;
+    private String game =null;
     /**
      * Constructor del Request
      * @param socket recibe el socket
@@ -27,17 +27,16 @@ public class Request implements Runnable{
              BufferedReader bfr = new BufferedReader(isr);
             OutputStream os = socket.getOutputStream();
             PrintWriter pWriter = new PrintWriter(os);){
-            String juego="";
-            String mensaje[] = bfr.readLine().split(",");//El player informa si empieza, termina una partida y los datos necesarios
+            String gameType= "";
+            String[] message = bfr.readLine().split(",");//El player informa si empieza, termina una partida y los datos necesarios
             //si el juego empieza, se recibe el nombre del jugador y el tipo de juego, y se le asigna el puerto
-            if("Empezar".equalsIgnoreCase(mensaje[0])){
-                juego=mensaje[2];
-                asignarPuerto(pWriter,juego);
+            if("Empezar".equalsIgnoreCase(message[0])){
+                System.out.println(message[2]+"********************");
+                gameType=message[2];
+                assignPort(pWriter,gameType);
             }else{ //si termina, se recibe el id de la partida y se elimina de la memoria
-                //Server.finPartida(idPartida);
-                //todo borrar las partidas
+                Server.endGame(message[1]);
             }
-            System.out.println("Mensaje recibido: " + mensaje[1]); //todo Print debug
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -47,30 +46,28 @@ public class Request implements Runnable{
     /**
      * Metodo sincronizado para asignar los puertos a los jugadores
      * @param pWriter recibe el printWriter
+     * @param gameType recibe el tipo de juego
      */
-    private synchronized void asignarPuerto(PrintWriter pWriter,String juego) {
+    private synchronized void assignPort(PrintWriter pWriter, String gameType) {
         //si el juego es dados, usa el metodo anfitrion() para asignarlo
         //comunica si se es o no anfitrion y el puerto, que se genera con el metodo generarPuerto()
-        if("Dados".equalsIgnoreCase(juego)) {
-            int nJugadores=2;
-            anfitrion = Server.anfitrion(nJugadores);
-            pWriter.println(anfitrion);
+        if("Dados".equalsIgnoreCase(gameType)) {
+            int nPlayers=2;
+            host = Server.isHost(nPlayers);
+            pWriter.println(host);
             pWriter.flush();
-            puerto= Server.generarPuerto();
-            pWriter.println(puerto);
+            port = Server.generatePort();
+            pWriter.println(port);
             pWriter.flush();
-            Server.guardarJugadoresYCrearParejas(""+anfitrion+","+puerto);
-            while(partida==null){
-                partida=Server.datosPartida(""+puerto);
+            Server.savePlayersAndCouples(""+ host +","+ port);
+            while(this.game ==null){
+                this.game =Server.startingData(""+ port);
             }
-            pWriter.println(partida);
+            pWriter.println(this.game);
             pWriter.flush();
 
         }else{ //else para si se incorporan otros juegos con distinto numero de jugadores
             System.out.println("No hay otro tipo de juego");
         }
     }
-
-
-
 }
