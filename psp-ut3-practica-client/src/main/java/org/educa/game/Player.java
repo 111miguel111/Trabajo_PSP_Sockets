@@ -72,7 +72,7 @@ public class Player extends Thread {
                     pWriter.println(message);
                     pWriter.flush();
                     String []parts = game.split(",");
-                    System.out.println(parts[0]+" finalizada, datos enviados al Servidor");
+                    System.out.println(parts[0]+" finalizada, datos enviados al Servidor\n");
                 }
             }
         } catch (IOException e) {
@@ -86,21 +86,21 @@ public class Player extends Thread {
     private void communicationPlayers(String nick) {
         String result="E";
         int ownPort= port;
-        int anothersPort;
+        int otherPort;
 
         String [] parts = game.split(",");
 
         if(host) {
-            anothersPort=Integer.parseInt(parts[4]);
+            otherPort=Integer.parseInt(parts[4]);
         }else{
-            anothersPort =Integer.parseInt(parts[2]);
+            otherPort =Integer.parseInt(parts[2]);
         }
 
         System.out.println("Creando socket datagram");
 
         //se establecen ambos puertos, el de enviar y el de recibir mensajes
         InetSocketAddress addr = new InetSocketAddress("localhost", ownPort);
-        InetSocketAddress adrToSend = new InetSocketAddress("localhost", anothersPort);
+        InetSocketAddress adrToSend = new InetSocketAddress("localhost", otherPort);
 
         //se crea el datagrama
         try (DatagramSocket datagramSocket = new DatagramSocket(addr)){
@@ -179,11 +179,11 @@ public class Player extends Thread {
         datagramSocket.receive(datagram);
         String cadena = new String(datagram.getData(), 0, datagram.getLength()); //casteo de el mensaje del datagrama
         if("V".equalsIgnoreCase(cadena)) {
-            System.out.println("Ha ganado el anfitrion en la "+game);
+            System.out.println("Ha ganado el anfitrion en la "+game+"\n");
         } else if ("E".equalsIgnoreCase(cadena)) {
-            System.out.println("Ha habido empate en la "+game);
+            System.out.println("Ha habido empate en la "+game+"\n");
         }else{
-            System.out.println("Ha ganado el invitado en la "+game);
+            System.out.println("Ha ganado el invitado en la "+game+"\n");
         }
 
         return cadena;
@@ -199,8 +199,8 @@ public class Player extends Thread {
      */
     private static String resolution(int host, int guest, String nickGuest, String nickHost, String game){
 
-        System.out.println("El anfitrion "+nickHost+" de la "+game+" ha sacado un "+host);
-        System.out.println("Y el invitado "+nickGuest+" de la "+game+" ha sacado un "+guest);
+        System.out.println("El anfitrion "+nickHost+" de la "+game+" ha sacado un "+host+"\n");
+        System.out.println("El invitado "+nickGuest+" de la "+game+" ha sacado un "+guest+"\n");
         if(host>guest){
             return "V";
         }else if(host<guest){
