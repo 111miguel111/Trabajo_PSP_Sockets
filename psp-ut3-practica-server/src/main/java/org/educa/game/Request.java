@@ -31,7 +31,6 @@ public class Request implements Runnable{
             String[] message = bfr.readLine().split(",");//El player informa si empieza, termina una partida y los datos necesarios
             //si el juego empieza, se recibe el nombre del jugador y el tipo de juego, y se le asigna el puerto
             if("Empezar".equalsIgnoreCase(message[0])){
-                System.out.println(message[2]+"********************");
                 gameType=message[2];
                 assignPort(pWriter,gameType);
             }else{ //si termina, se recibe el id de la partida y se elimina de la memoria

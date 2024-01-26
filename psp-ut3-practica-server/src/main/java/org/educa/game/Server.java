@@ -8,9 +8,9 @@ import java.util.ArrayList;
 
 public class Server {
     private static boolean host =false;
-    public static int port =5556;
-    public static ArrayList<String> players =new ArrayList<>();
-    public static ArrayList<String> couples =new ArrayList<>();
+    protected static int port =5556;
+    protected static ArrayList<String> players =new ArrayList<>();
+    protected static ArrayList<String> couples =new ArrayList<>();
     private static int cp =1;
     private static int count =0;
 
@@ -54,7 +54,7 @@ public class Server {
      * Metodo sincronizado para asignar puertos a los diferentes jugadores
      * @return devuelve el puerto
      */
-    public synchronized static int generatePort(){
+    protected synchronized static int generatePort(){
         port = port +1;
         return port;
     }
@@ -63,7 +63,7 @@ public class Server {
      * metodo para crear los jugadores con su respectivo puerto, y las parejas para cada partida
      * @param data recibe los datos de los jugadores para añadirlos a su array
      */
-    public synchronized static void savePlayersAndCouples(String data){
+    protected synchronized static void savePlayersAndCouples(String data){
         players.add(data);
         String host="";
         String guest="";
@@ -81,7 +81,7 @@ public class Server {
             couples.add("Partida"+ count +","+host+","+guest);
         }
     }
-    public synchronized static String startingData(String port){
+    protected synchronized static String startingData(String port){
         for(int i = 0; i< couples.size(); i++){
             if(couples.get(i).contains(port)){
                 return couples.get(i);
@@ -95,7 +95,7 @@ public class Server {
      * @param nPlayers recibe el numero de jugadores que tiene el juego
      * @return devuelve si se es anfitrion o no
      */
-    public synchronized static boolean isHost(int nPlayers){
+    protected synchronized static boolean isHost(int nPlayers){
         //si el cp(currentPlayer) es igual al numero de jugadores del juego, se le hace anfitrion
         if (cp==nPlayers){
             host =true;
@@ -111,7 +111,7 @@ public class Server {
      * metodo para finalizar la partida y eliminarla del server
      * @param idGame recibe el id de la partida
      */
-    public synchronized static void endGame(String idGame) {
+    protected synchronized static void endGame(String idGame) {
         for(int i = 0; i< couples.size(); i++) {
             if(couples.get(i).contains(idGame)) {
                 couples.remove(i);
