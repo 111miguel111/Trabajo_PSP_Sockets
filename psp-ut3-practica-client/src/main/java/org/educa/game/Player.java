@@ -13,18 +13,17 @@ public class Player extends Thread {
     private String game;
 
     /**
-     *
-     * @param name
-     * @param gameType
+     * El constructor del hilo
+     * @param name Nombre del jugador
+     * @param gameType Tipo de juego que quiere jugar el jugador
      */
     public Player(String name, String gameType) {
         super.setName(name);
         this.gameType = gameType;
-
     }
 
     /**
-     *
+     * El metodo principal del hilo
      */
     @Override
     public void run() {
@@ -48,7 +47,6 @@ public class Player extends Thread {
                  PrintWriter pWriter = new PrintWriter(os);
                  InputStream is = clientSocket.getInputStream();
                  BufferedReader reader = new BufferedReader(new InputStreamReader(is))){
-
                 String message;
                 //Si el juego esta empezando se manda un mensaje distinto a si esta terminando
                 if(start){
@@ -61,7 +59,6 @@ public class Player extends Thread {
                         host = Boolean.parseBoolean(serverMessage); //Si es o no anfitrion
                         port = Integer.parseInt(reader.readLine()); //El numero de puerto
                         game = reader.readLine();
-
                         serverMessage = null; //Una vez tiene lo que necesita, se fuerza la salida del while
                     }
                     clientSocket.close();
@@ -87,21 +84,16 @@ public class Player extends Thread {
         String result="E";
         int ownPort= port;
         int otherPort;
-
         String [] parts = game.split(",");
-
         if(host) {
             otherPort=Integer.parseInt(parts[4]);
         }else{
             otherPort =Integer.parseInt(parts[2]);
         }
-
         System.out.println("Creando socket datagram");
-
         //se establecen ambos puertos, el de enviar y el de recibir mensajes
         InetSocketAddress addr = new InetSocketAddress("localhost", ownPort);
         InetSocketAddress adrToSend = new InetSocketAddress("localhost", otherPort);
-
         //se crea el datagrama
         try (DatagramSocket datagramSocket = new DatagramSocket(addr)){
             while("E".equalsIgnoreCase(result)){ //en caso de ser empate, se repite
@@ -114,13 +106,11 @@ public class Player extends Thread {
                     sendDatagramHost(adrToSend, datagramSocket, result);
                 }
             }
-
             printGame(parts[0], result);
             start = false;
             if(host) {
                 communicationServer();
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
